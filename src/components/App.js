@@ -72,6 +72,7 @@ function App() {
         setIsEditProfilePopupOpen(false);
         setIsAddPlacePopupOpen(false);
         setIsImagePopupOpen(false);
+        setInfoTooltipOpen(false)
     }
 
     function handleCardClick(card) {
@@ -250,8 +251,6 @@ function App() {
                 isOpen={infoTooltipOpen}
                 onClose={closeAllPopups}
                 status={status}
-                text={status === 'accept' ? 'Вы успешно зарегистрировались!'
-                : 'Что-то пошло не так! Попробуйте ещё раз.'}
                 />
         </div>
         </CurrentUserContext.Provider>
