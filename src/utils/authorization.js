@@ -30,3 +30,14 @@ export const signIn = async (data) => {
     });
     return getResponse(res);
 };
+
+export const checkAuthData = async(token) => {
+    const res = await fetch(`${BASE_URL}/users/me`, {
+        method: 'GET',
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+        }
+    });
+    return getResponse(res)
+}

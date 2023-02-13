@@ -13,7 +13,8 @@ import { AddPlacePopup } from "./AddPlacePopup ";
 import Register from "./Register";
 import Login from "./Login";
 import ProtectedRoute from "./ProtectedRoute";
-import {signIn, signUp} from "../utils/authorization";
+import {checkAuthData, signIn, signUp} from "../utils/authorization";
+import InfoTooltip from "./InfoTooltip";
 
 function App() {
     const [isEditProfilePopupOpen, setIsEditProfilePopupOpen] = useState(false);
@@ -29,6 +30,8 @@ function App() {
 
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [userEmail, setUserEmail] = useState('');
+    const [infoTooltipOpen, setInfoTooltipOpen] = useState(false);
+    const [status, setStatus] = useState('');
     const navigate = useNavigate();
 
 
@@ -147,9 +150,13 @@ function App() {
     const handleRegister = async (data) => {
         try {
             await signUp(data);
+            setInfoTooltipOpen(true);
+            setStatus('accept');
             navigate("/sign-in")
         } catch(err) {
             console.log(err)
+            setInfoTooltipOpen(true);
+            setStatus('failed');
         }
     }
 
@@ -161,7 +168,9 @@ function App() {
             setUserEmail(data.email);
             navigate("/")
         } catch(err) {
-            console.log(err)
+            console.log(err);
+            setInfoTooltipOpen(true);
+            setStatus('failed');
         }
     }
 
@@ -172,6 +181,19 @@ function App() {
         navigate('/sign-in')
     } 
 
+    useEffect(() =>{
+        const jwt = localStorage.getItem('jwt');
+
+        if(jwt) {
+            checkAuthData(jwt)
+            .then((res) => {
+                setIsLoggedIn(true);
+                setUserEmail(res.data.email);
+                navigate('/')
+            })
+            .catch((err) => console.log(err))
+        }
+    }, [navigate])
 
     return (
         <CurrentUserContext.Provider value={currentUser}>
@@ -223,6 +245,14 @@ function App() {
                     onClose={closeAllPopups}
                     onUpdateAvatar={handleUpdateAvatar}
                 /> 
+                <InfoTooltip
+                name="status"
+                isOpen={infoTooltipOpen}
+                onClose={closeAllPopups}
+                status={status}
+                text={status === 'accept' ? 'Вы успешно зарегистрировались!'
+                : 'Что-то пошло не так! Попробуйте ещё раз.'}
+                />
         </div>
         </CurrentUserContext.Provider>
     );
