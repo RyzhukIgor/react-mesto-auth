@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useNavigate } from 'react-router-dom';
 import Header from "./Header";
 import Main from "./Main";
 import Footer from "./Footer";
@@ -13,6 +13,7 @@ import { AddPlacePopup } from "./AddPlacePopup ";
 import Register from "./Register";
 import Login from "./Login";
 import ProtectedRoute from "./ProtectedRoute";
+import {signIn, signUp} from "../utils/authorization";
 
 function App() {
     const [isEditProfilePopupOpen, setIsEditProfilePopupOpen] = useState(false);
@@ -25,6 +26,10 @@ function App() {
     const [currentUser, setCurrentUser] = React.useState({});
     
     const [isRenderLoading, setIsRenderLoading] = useState(false);
+
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [userEmail, setUserEmail] = useState('');
+    const navigate = useNavigate();
 
 
     useEffect(() => {
@@ -139,12 +144,42 @@ function App() {
             });
     }
 
+    const handleRegister = async (data) => {
+        try {
+            await signUp(data);
+            navigate("/sign-in")
+        } catch(err) {
+            console.log(err)
+        }
+    }
+
+    const handleSignIn = async (data) => {
+        try {
+            const {token} = await signIn(data);
+            localStorage.setItem('jwt', token);
+            setIsLoggedIn(true);
+            setUserEmail(data.email);
+            navigate("/")
+        } catch(err) {
+            console.log(err)
+        }
+    }
+
+    function handleSignExit(){
+        localStorage.removeItem('jwt');
+        setIsLoggedIn(false);
+        setUserEmail('');
+        navigate('/sign-in')
+    } 
+
+
     return (
         <CurrentUserContext.Provider value={currentUser}>
         <div className="page">
-                <Header />
+                <Header userEmail={userEmail} onSignExit={handleSignExit}/>
                 <Routes>
                     <Route path="/" element={
+                        <ProtectedRoute isLoggedIn={isLoggedIn}>
                 <Main
                     onEditProfile={handleEditProfileClick}
                     onAddPlace={handleAddPlaceClick}
@@ -153,9 +188,11 @@ function App() {
                     cards={cards}
                     onCardLike={handleCardLike}
                     onCardDelete={handleCardDelete}
-                />} />
-                <Route path="/sign-up" element={<Register/>}/>
-                <Route path="/sign-in" element={<Login/>}/>
+                /> 
+                </ProtectedRoute>
+                } />
+                <Route path="/sign-up" element={<Register onSubmit={handleRegister}/>}/>
+                <Route path="/sign-in" element={<Login onSubmit={handleSignIn}/>}/>
                 </Routes>
                 <Footer />
                 <EditProfilePopup
